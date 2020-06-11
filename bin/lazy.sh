@@ -137,7 +137,14 @@ do
         echo_info_n "Running full vulnerability scan against $ip...(Can take some time)... "
         sudo masscan -p0-65535 --banners --rate=10000 "$ip" -oG "$masscan_outfile" &>> $LOG 
         ports=$(cat "$masscan_outfile" | grep -v "#" | sed 's/\// /g' | awk '{ print $5 }'  | sort -u | tr '\n' ',' | rev | cut -c 2- | rev)
-        nmap -Pn -T5 -sV -p$ports --script vulners -oX "$nmap_outfile" "$ip" &>> $LOG
+        if [ "$(echo $ports | wc -c )" -gt 1 ]
+        then
+            echo "Ports [$ports]" >> $LOG
+            nmap -Pn -T5 -sV -p$ports --script=vulners -oX "$nmap_outfile" "$ip" &>> $LOG
+        else
+            echo "No Ports, doing classic nmap... " >> $LOG
+            nmap -Pn -T5 -sV --script=vulners -oX "$nmap_outfile" "$ip" &>> $LOG
+        fi
         ok
     fi
 done
