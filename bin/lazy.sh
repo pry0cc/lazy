@@ -73,12 +73,12 @@ mkdir -p $HOME_DIR/scans/domains
 mkdir -p $HOME_DIR/scans/ip
 mkdir -p $HOME_DIR/http/aquatone
 
+flags="$HOME_DIR/flags"
 domains="$HOME_DIR/dns/domains"
 takeover="$HOME_DIR/dns/takeover"
 responsive="$HOME_DIR/dns/responsive"
 all_urls="$HOME_DIR/http/all_urls"
 interestingsubs="$HOME_DIR/flags/interestingsubs"
-secrets="$HOME_DIR/flags/secrets"
 ip_uniq="$HOME_DIR/dns/ip_uniq"
 resolved="$HOME_DIR/dns/resolved"
 javascript_files="$HOME_DIR/http/javascript_files"
@@ -94,6 +94,7 @@ echo_info_n "Running DNS enumeration... "
 subfinder -silent -d $1 | tee -a $domains &>> $LOG
 assetfinder -subs-only $1 | tee -a $domains &>> $LOG
 curl -s "https://crt.sh/?q=%25.$1&output=json" | jq -r '.[].name_value' | sed 's/\*\.//g' | sort -u | tee -a $domains &>> $LOG
+# This needs serious work - I'm sorry vict0ni :)
 #cat ~/lists/jhaddix-all.txt | subgen -d "$1" |  zdns A  | jq '.[].answers?[]?' | jq -r 'select(.type == "A") | .name' | tee -a domains
 ok
 
@@ -177,21 +178,20 @@ ok
 echo_info "Scanning javascript files for secrets... "
 wget -nc -i $javascript_files -P "$js" &>> $LOG
 cat $js/* >> $js/gf-all
-gf sec $js/gf-all > $secrets 
+gf sec $js/gf-all > $flags/secrets 
 ok
 
 echo_info "Running aquatone against all endpoints... "
 if [ ! -f "$aquatone/aquatone_report.html" ]
 then
-    cat $domains | aquatone -out $aquatone -ports 80,443,8080,8000,8443,8081 -scan-timeout 20000
+    cat $domains | aquatone -out $aquatone -ports 80,443,7443,8080,8000,8443,8081 -scan-timeout 20000
 fi
 ok
 
 #grabing endpoints that include juicy parameters
-#gf redirect all_urls | anti-burl > redirects
-#gf idor all_urls | anti-burl > idor
-#gf rce all_urls | anti-burl > rce
-#gf lfi all_urls | anti-burl > lfi
-#gf xss all_urls | anti-burl > xss
-#gf xss all_urls | anti-burl > xss
-#gf ssrf all_urls | anti-burl > ssrf
+gf redirect $all_urls | anti-burl > $flags/redirects
+gf idor $all_urls | anti-burl > $flags/idor
+gf rce $all_urls | anti-burl > $flags/rce
+gf lfi $all_urls | anti-burl > $flags/lfi
+gf xss $all_urls | anti-burl > $flags/xss
+gf ssrf $all_urls | anti-burl > $flags/ssrf
