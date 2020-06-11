@@ -1,5 +1,5 @@
-# Axiom box: `pry0cc/basebox-1`
-Welcome to the first publicly available axiom box on github!
+# Axiom box: `pry0cc/lazy`
+Welcome to the second publicly available axiom box on github!
 
 ## Description
 This box is a fork of https://github.com/victoni/Bug-Bounty-Scripts/, this is a repo of Vict0ni's bug bounty emumeration scripts and some tooling that he uses, I thought it was a perfect example for what this does.
@@ -12,17 +12,17 @@ This box is a fork of https://github.com/victoni/Bug-Bounty-Scripts/, this is a 
 
 # Installation
 ```
-axiom-boxes get pry0cc/basebox-1
+axiom-boxes get pry0cc/lazy
 ```
 
 # Usage
 ```
-axiom-init --restore=pry0cc-basebox-1
+axiom-init --restore=pry0cc/lazy
 ```
 
 ```
 axiom-select my-server
-axiom-restore pry0cc-basebox-1
+axiom-restore pry0cc/lazy
 ```
 
 Enjoy!
