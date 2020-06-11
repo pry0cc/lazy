@@ -164,8 +164,8 @@ ok
 
 #endpoint discovery
 echo_info_n "Crawling detected URLs... "
-#cat $responsive | gau | tee -a $all_urls &>> $LOG
-#cat $responsive | hakrawler --depth 3 --plain | tee -a $all_urls &>> $LOG
+cat $responsive | gau | tee -a $all_urls &>> $LOG
+cat $responsive | hakrawler --depth 3 --plain | tee -a $all_urls &>> $LOG
 ok
 
 #extracting all responsive js files
