@@ -59,6 +59,13 @@ ok() {
     
 }
 
+set_progress() {
+	progress="$1"
+	echo $progress > /tmp/progress
+}
+
+set_progress 0
+
 echo_success "Launching enumeration against $1"
 echo_info_n "Creating folder structure... "
 TARGET="$1"
@@ -88,6 +95,7 @@ aquatone="$HOME_DIR/http/aquatone"
 cd $HOME_DIR
 ok
 
+set_progress 5
 #finding subdomains
 
 echo_info_n "Running DNS enumeration... "
@@ -98,6 +106,7 @@ curl -s "https://crt.sh/?q=%25.$1&output=json" | jq -r '.[].name_value' | sed 's
 #cat ~/lists/jhaddix-all.txt | subgen -d "$1" |  zdns A  | jq '.[].answers?[]?' | jq -r 'select(.type == "A") | .name' | tee -a domains
 ok
 
+set_progress 10
 #sorting/uniq
 echo_info_n "Sorting domain files... "
 sort -u $domains > $HOME_DIR/dns/dom2;rm $domains;mv $HOME_DIR/dns/dom2 $domains
@@ -110,6 +119,7 @@ echo_info_n "Scanning for domain takeovers... "
 subjack -w $domains -t 100 -timeout 30 -ssl -c $GOPATH/src/github.com/haccer/subjack/fingerprints.json -v | tee -a $takeover &>> $LOG
 ok
 
+set_progress 15
 #httprobing 
 echo_info_n "Probing for interactive hosts... "
 cat $domains | httprobe | sort -u | tee -a $responsive &>> $LOG
@@ -118,6 +128,7 @@ ok
 
 echo_success "Found $(wc -l $responsive| awk '{ print $1 }') responsive hosts!"
 
+set_progress 20
 #resolving
 echo_info_n "Resolving domains... "
 cat $domains | dnsprobe -silent | tee -a $resolved &>> $LOG
@@ -125,6 +136,7 @@ cat $resolved | sed 's/ /,/g' | tee -a $resolved.formatted &>> $LOG
 cat $resolved | awk '{ print $2 }' | sort -u > $ip_uniq
 ok
 
+set_progress 30
 echo_success "Launching full IP scan"
 
 for ip in $(cat $ip_uniq)
@@ -149,6 +161,7 @@ do
     fi
 done
 
+set_progress 50
 ok
 echo_info_n "Converting scans and parsing to json... "
 
@@ -169,6 +182,7 @@ done
 
 ok
 
+set_progress 60
 
 #endpoint discovery
 echo_info_n "Crawling detected URLs... "
@@ -176,11 +190,13 @@ cat $responsive | gau | tee -a $all_urls &>> $LOG
 cat $responsive | hakrawler --depth 3 --plain | tee -a $all_urls &>> $LOG
 ok
 
+set_progress 65
 #extracting all responsive js files
 echo_info "Scanning javascript files for secrets... "
 grep "\.js$" $all_urls | anti-burl | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" | sort -u | tee -a $javascript_files
 ok
 
+set_progress 70
 #analyzing js files for secrets
 echo_info "Scanning javascript files for secrets... "
 wget -nc -i $javascript_files -P "$js" &>> $LOG
@@ -188,6 +204,7 @@ cat $js/* >> $js/gf-all
 gf sec $js/gf-all > $flags/secrets 
 ok
 
+set_progress 80
 echo_info "Running aquatone against all endpoints... "
 if [ ! -f "$aquatone/aquatone_report.html" ]
 then
@@ -195,6 +212,7 @@ then
 fi
 ok
 
+set_progress 90
 #grabing endpoints that include juicy parameters
 gf redirect $all_urls | anti-burl > $flags/redirects
 gf idor $all_urls | anti-burl > $flags/idor
@@ -202,3 +220,6 @@ gf rce $all_urls | anti-burl > $flags/rce
 gf lfi $all_urls | anti-burl > $flags/lfi
 gf xss $all_urls | anti-burl > $flags/xss
 gf ssrf $all_urls | anti-burl > $flags/ssrf
+
+
+set_progress 100
